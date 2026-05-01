@@ -2,3 +2,5 @@ aiogram==3.13.0
 aiosqlite
 aiofiles
 APScheduler
+fastapi
+uvicorn
