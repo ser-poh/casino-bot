@@ -1,4 +1,4 @@
-BOT_TOKEN = "8629210726:AAEH9OFz9rRFsBmOySCfivoh-fN9xDoL2Ic"
+BOT_TOKEN = "BOT_TOKEN"
 
 DB_NAME = "casino.db"
 
