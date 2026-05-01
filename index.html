@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Casino Bot</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: #1a1a2e; color: #fff; font-family: Arial, sans-serif; min-height: 100vh; }
+        .header { background: linear-gradient(135deg, #16213e, #0f3460); padding: 20px; text-align: center; }
+        .header h1 { font-size: 24px; color: #e94560; }
+        .balance-card { background: linear-gradient(135deg, #e94560, #0f3460); margin: 20px; padding: 20px; border-radius: 15px; text-align: center; }
+        .balance-card .amount { font-size: 36px; font-weight: bold; }
+        .balance-card .label { font-size: 14px; opacity: 0.8; }
+        .tabs { display: flex; margin: 0 20px; gap: 10px; }
+        .tab { flex: 1; padding: 10px; text-align: center; border-radius: 10px; cursor: pointer; background: #16213e; border: none; color: #fff; font-size: 14px; }
+        .tab.active { background: #e94560; }
+        .content { padding: 20px; }
+        .item { background: #16213e; border-radius: 10px; padding: 15px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+        .item .name { font-size: 16px; }
+        .item .value { color: #ffd700; font-weight: bold; }
+        .rarity-badge { font-size: 12px; padding: 3px 8px; border-radius: 5px; }
+        .Обычный { background: #555; }
+        .Редкий { background: #1a5276; }
+        .Эпический { background: #6c3483; }
+        .Легендарный { background: #7d6608; }
+        .top-item { background: #16213e; border-radius: 10px; padding: 15px; margin-bottom: 10px; display: flex; align-items: center; gap: 15px; }
+        .top-item .rank { font-size: 24px; width: 40px; }
+        .top-item .username { flex: 1; font-size: 16px; }
+        .top-item .balance { color: #ffd700; font-weight: bold; }
+        .loading { text-align: center; padding: 40px; opacity: 0.6; }
+        .empty { text-align: center; padding: 40px; opacity: 0.6; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🎰 Casino Bot</h1>
+    </div>
+
+    <div class="balance-card">
+        <div class="label">Твой баланс</div>
+        <div class="amount" id="balance">...</div>
+        <div class="label">💰 монет</div>
+    </div>
+
+    <div class="tabs">
+        <button class="tab active" onclick="showTab('inventory')">🎒 Инвентарь</button>
+        <button class="tab" onclick="showTab('top')">📊 Топ</button>
+    </div>
+
+    <div class="content" id="content">
+        <div class="loading">Загрузка...</div>
+    </div>
+
+    <script>
+        const API = "https://casino-bot-production-e38b.up.railway.app";
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+
+        let userId = null;
+        let currentTab = 'inventory';
+        let userData = null;
+
+        async function init() {
+            if (tg.initDataUnsafe?.user?.id) {
+                userId = tg.initDataUnsafe.user.id;
+            } else {
+                userId = 1; // для теста в браузере
+            }
+            await loadUserData();
+            showTab('inventory');
+        }
+
+        async function loadUserData() {
+            try {
+                const res = await fetch(`${API}/user/${userId}`);
+                if (!res.ok) throw new Error();
+                userData = await res.json();
+                document.getElementById('balance').textContent = userData.balance.toLocaleString();
+            } catch {
+                document.getElementById('balance').textContent = '—';
+            }
+        }
+
+        async function showTab(tab) {
+            currentTab = tab;
+            document.querySelectorAll('.tab').forEach((t, i) => {
+                t.classList.toggle('active', (i === 0 && tab === 'inventory') || (i === 1 && tab === 'top'));
+            });
+
+            const content = document.getElementById('content');
+            content.innerHTML = '<div class="loading">Загрузка...</div>';
+
+            if (tab === 'inventory') {
+                if (!userData) await loadUserData();
+                const items = userData?.inventory || [];
+                if (items.length === 0) {
+                    content.innerHTML = '<div class="empty">🎒 Инвентарь пуст<br><br>Открывай кейсы в боте!</div>';
+                    return;
+                }
+                content.innerHTML = items.map(item => `
+                    <div class="item">
+                        <div>
+                            <div class="name">${item.emoji} ${item.name}</div>
+                            <span class="rarity-badge ${item.rarity}">${item.rarity}</span>
+                        </div>
+                        <div class="value">${item.value}💰</div>
+                    </div>
+                `).join('');
+            } else {
+                try {
+                    const res = await fetch(`${API}/top`);
+                    const users = await res.json();
+                    const medals = ['🥇','🥈','🥉'];
+                    content.innerHTML = users.map((u, i) => `
+                        <div class="top-item">
+                            <div class="rank">${medals[i] || (i+1)+'.'}</div>
+                            <div class="username">@${u.username || 'Аноним'}</div>
+                            <div class="balance">${u.balance.toLocaleString()}💰</div>
+                        </div>
+                    `).join('');
+                } catch {
+                    content.innerHTML = '<div class="empty">Ошибка загрузки</div>';
+                }
+            }
+        }
+
+        init();
+    </script>
+</body>
+</html>
