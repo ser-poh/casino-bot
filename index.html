@@ -502,15 +502,16 @@ const API = "https://casino-bot-production-e38b.up.railway.app";
 const tg = window.Telegram?.WebApp || null;
 if (tg) tg.expand();
 
-let userId = 1;
+let userId = null;
 try {
     if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user && tg.initDataUnsafe.user.id) {
         userId = tg.initDataUnsafe.user.id;
-    } else {
-        userId = 7306608319;
     }
-} catch(e) {
-    userId = 7306608319;
+} catch(e) {}
+
+if (!userId) {
+    document.body.innerHTML = '<div style="padding:40px;text-align:center;font-family:sans-serif;color:#fff;background:#0a0a0f;min-height:100vh;display:flex;align-items:center;justify-content:center;flex-direction:column"><div style="font-size:48px;margin-bottom:16px">🎰</div><div style="font-size:18px">Открывай через Telegram бота!</div></div>';
+    throw new Error('No Telegram user');
 }
 let userBalance = 0;
 let currentTab = 'cases';
