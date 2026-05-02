@@ -499,15 +499,15 @@
 
 <script>
 const API = "https://casino-bot-production-e38b.up.railway.app";
-const tg = window.Telegram.WebApp;
-tg.expand();
+const tg = window.Telegram?.WebApp || null;
+if (tg) tg.expand();
 
-let userId = tg.initDataUnsafe?.user?.id || 1;
+let userId = tg?.initDataUnsafe?.user?.id || 1;
+let userBalance = 0;
 let currentTab = 'cases';
 let selectedGame = null;
 let coinChoice = null;
 let rouletteChoice = null;
-let userBalance = 0;
 
 // ─── INIT ───────────────────────────────────────────
 async function init() {
