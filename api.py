@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from database.db import get_balance, get_inventory, get_top_users, get_all_cases, get_case, get_case_items, add_to_inventory, update_balance, sell_item, register_user
 import random
-
+import aiosqlite
 app = FastAPI()
 
 app.add_middleware(
@@ -133,3 +133,11 @@ async def sell(req: SellRequest):
     await update_balance(req.user_id, value)
     new_balance = await get_balance(req.user_id)
     return {"value": value, "new_balance": new_balance}
+
+@app.get("/admin/reset")
+async def reset_db():
+    async with aiosqlite.connect("casino.db") as db:
+        await db.execute("DELETE FROM inventory")
+        await db.execute("DELETE FROM users")
+        await db.commit()
+    return {"ok": True}
