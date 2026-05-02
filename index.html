@@ -2,131 +2,885 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Casino Bot</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <title>Cristal Case</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=Exo+2:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { background: #1a1a2e; color: #fff; font-family: Arial, sans-serif; min-height: 100vh; }
-        .header { background: linear-gradient(135deg, #16213e, #0f3460); padding: 20px; text-align: center; }
-        .header h1 { font-size: 24px; color: #e94560; }
-        .balance-card { background: linear-gradient(135deg, #e94560, #0f3460); margin: 20px; padding: 20px; border-radius: 15px; text-align: center; }
-        .balance-card .amount { font-size: 36px; font-weight: bold; }
-        .balance-card .label { font-size: 14px; opacity: 0.8; }
-        .tabs { display: flex; margin: 0 20px; gap: 10px; }
-        .tab { flex: 1; padding: 10px; text-align: center; border-radius: 10px; cursor: pointer; background: #16213e; border: none; color: #fff; font-size: 14px; }
-        .tab.active { background: #e94560; }
-        .content { padding: 20px; }
-        .item { background: #16213e; border-radius: 10px; padding: 15px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
-        .item .name { font-size: 16px; }
-        .item .value { color: #ffd700; font-weight: bold; }
-        .rarity-badge { font-size: 12px; padding: 3px 8px; border-radius: 5px; }
-        .Обычный { background: #555; }
-        .Редкий { background: #1a5276; }
-        .Эпический { background: #6c3483; }
-        .Легендарный { background: #7d6608; }
-        .top-item { background: #16213e; border-radius: 10px; padding: 15px; margin-bottom: 10px; display: flex; align-items: center; gap: 15px; }
-        .top-item .rank { font-size: 24px; width: 40px; }
-        .top-item .username { flex: 1; font-size: 16px; }
-        .top-item .balance { color: #ffd700; font-weight: bold; }
-        .loading { text-align: center; padding: 40px; opacity: 0.6; }
-        .empty { text-align: center; padding: 40px; opacity: 0.6; }
+        :root {
+            --bg: #0a0a0f;
+            --surface: #12121a;
+            --card: #1a1a26;
+            --border: #2a2a3a;
+            --accent: #c8a96e;
+            --accent2: #7b6cf6;
+            --red: #e94560;
+            --green: #2ecc71;
+            --text: #e8e8f0;
+            --muted: #6b6b85;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Exo 2', sans-serif;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* BG pattern */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image:
+                radial-gradient(ellipse at 20% 20%, rgba(123,108,246,0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 80%, rgba(200,169,110,0.06) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .app { position: relative; z-index: 1; max-width: 480px; margin: 0 auto; }
+
+        /* HEADER */
+        .header {
+            padding: 16px 20px 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .logo {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 22px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .balance-pill {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 6px 14px;
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--accent);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* NAV */
+        .nav {
+            display: flex;
+            padding: 10px 12px;
+            gap: 6px;
+            border-bottom: 1px solid var(--border);
+            overflow-x: auto;
+            scrollbar-width: none;
+        }
+        .nav::-webkit-scrollbar { display: none; }
+
+        .nav-btn {
+            flex-shrink: 0;
+            background: transparent;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 8px 14px;
+            color: var(--muted);
+            font-family: 'Exo 2', sans-serif;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        .nav-btn.active {
+            background: var(--card);
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        /* CONTENT */
+        .content { padding: 16px; }
+
+        /* SECTION TITLE */
+        .section-title {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 18px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            color: var(--text);
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .section-title::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border);
+        }
+
+        /* CARDS */
+        .card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 16px;
+            margin-bottom: 10px;
+            transition: border-color 0.2s;
+        }
+        .card:hover { border-color: var(--accent); }
+
+        /* CASES */
+        .case-card {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            cursor: pointer;
+        }
+        .case-emoji { font-size: 36px; }
+        .case-info { flex: 1; }
+        .case-name {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 17px;
+            font-weight: 700;
+        }
+        .case-price {
+            color: var(--accent);
+            font-size: 14px;
+            margin-top: 2px;
+        }
+        .case-btn {
+            background: linear-gradient(135deg, var(--accent), #a08040);
+            border: none;
+            border-radius: 10px;
+            padding: 10px 18px;
+            color: #0a0a0f;
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.1s, opacity 0.2s;
+        }
+        .case-btn:active { transform: scale(0.95); }
+        .case-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+        /* GAMES */
+        .games-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .game-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 18px 14px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .game-card:hover { border-color: var(--accent2); transform: translateY(-2px); }
+        .game-card.active-game { border-color: var(--accent2); background: rgba(123,108,246,0.1); }
+        .game-emoji { font-size: 32px; margin-bottom: 8px; }
+        .game-name {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 15px;
+            font-weight: 700;
+        }
+
+        /* GAME PANEL */
+        .game-panel {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 20px;
+            margin-top: 10px;
+            display: none;
+        }
+        .game-panel.visible { display: block; }
+
+        .game-title {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 20px;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 16px;
+        }
+
+        .input-group { margin-bottom: 14px; }
+        .input-label { font-size: 13px; color: var(--muted); margin-bottom: 6px; }
+        .bet-input {
+            width: 100%;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 12px 14px;
+            color: var(--text);
+            font-family: 'Exo 2', sans-serif;
+            font-size: 16px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .bet-input:focus { border-color: var(--accent2); }
+
+        .btn-row { display: flex; gap: 8px; margin-bottom: 14px; }
+        .choice-btn {
+            flex: 1;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 12px;
+            color: var(--text);
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .choice-btn.selected { border-color: var(--accent2); background: rgba(123,108,246,0.15); color: var(--accent2); }
+
+        .play-btn {
+            width: 100%;
+            background: linear-gradient(135deg, var(--accent2), #5a4fd4);
+            border: none;
+            border-radius: 10px;
+            padding: 14px;
+            color: #fff;
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 17px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: transform 0.1s, opacity 0.2s;
+        }
+        .play-btn:active { transform: scale(0.98); }
+        .play-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+        /* RESULT */
+        .result-box {
+            background: var(--surface);
+            border-radius: 10px;
+            padding: 14px;
+            margin-top: 14px;
+            text-align: center;
+            font-size: 15px;
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+        .result-box.visible { display: block; }
+        .result-win { color: var(--green); font-weight: 600; }
+        .result-lose { color: var(--red); font-weight: 600; }
+        .result-symbols { font-size: 28px; letter-spacing: 4px; margin-bottom: 8px; }
+
+        /* SLOTS DISPLAY */
+        .slots-display {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            font-size: 36px;
+            margin: 14px 0;
+            min-height: 52px;
+        }
+        .slot-reel {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            width: 70px;
+            height: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            transition: transform 0.3s;
+        }
+        .slot-reel.spin { animation: spinReel 0.5s ease; }
+
+        @keyframes spinReel {
+            0% { transform: translateY(-10px); opacity: 0; }
+            100% { transform: translateY(0); opacity: 1; }
+        }
+
+        /* INVENTORY */
+        .inv-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .inv-emoji { font-size: 28px; }
+        .inv-info { flex: 1; }
+        .inv-name { font-size: 15px; font-weight: 600; }
+        .inv-rarity { font-size: 12px; margin-top: 2px; }
+        .rarity-Обычный { color: #aaa; }
+        .rarity-Редкий { color: #5dade2; }
+        .rarity-Эпический { color: #a569bd; }
+        .rarity-Легендарный { color: var(--accent); }
+
+        .inv-value { color: var(--accent); font-weight: 700; font-size: 15px; }
+        .sell-btn {
+            background: transparent;
+            border: 1px solid var(--red);
+            border-radius: 8px;
+            padding: 6px 12px;
+            color: var(--red);
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: 'Exo 2', sans-serif;
+        }
+        .sell-btn:hover { background: var(--red); color: #fff; }
+
+        .sell-all-btn {
+            width: 100%;
+            background: transparent;
+            border: 1px solid var(--red);
+            border-radius: 10px;
+            padding: 12px;
+            color: var(--red);
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-top: 10px;
+        }
+        .sell-all-btn:hover { background: var(--red); color: #fff; }
+
+        /* TOP */
+        .top-item {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+        .top-rank {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 22px;
+            font-weight: 700;
+            width: 36px;
+            text-align: center;
+        }
+        .top-name { flex: 1; font-size: 15px; }
+        .top-balance { color: var(--accent); font-weight: 700; font-family: 'Rajdhani', sans-serif; font-size: 16px; }
+
+        /* WIN POPUP */
+        .popup-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.8);
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+        .popup-overlay.visible { display: flex; }
+        .popup {
+            background: var(--card);
+            border: 1px solid var(--accent);
+            border-radius: 20px;
+            padding: 30px 24px;
+            text-align: center;
+            max-width: 320px;
+            width: 100%;
+        }
+        .popup-emoji { font-size: 56px; margin-bottom: 12px; }
+        .popup-title {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 26px;
+            font-weight: 700;
+            color: var(--accent);
+            margin-bottom: 8px;
+        }
+        .popup-item { font-size: 16px; margin-bottom: 6px; }
+        .popup-rarity { margin-bottom: 16px; }
+        .popup-close {
+            background: linear-gradient(135deg, var(--accent), #a08040);
+            border: none;
+            border-radius: 10px;
+            padding: 12px 30px;
+            color: #0a0a0f;
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 17px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        /* TOAST */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(20px);
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 10px 20px;
+            font-size: 14px;
+            z-index: 200;
+            opacity: 0;
+            transition: all 0.3s;
+            white-space: nowrap;
+        }
+        .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+        /* LOADING */
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: var(--muted);
+            font-size: 14px;
+        }
+        .spinner {
+            width: 32px;
+            height: 32px;
+            border: 2px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 12px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        .empty {
+            text-align: center;
+            padding: 40px;
+            color: var(--muted);
+            font-size: 15px;
+            line-height: 1.6;
+        }
     </style>
 </head>
 <body>
+<div class="app">
     <div class="header">
-        <h1>🎰 Casino Bot</h1>
+        <div class="logo">◆ CRISTAL CASE</div>
+        <div class="balance-pill">💰 <span id="balance-display">...</span></div>
     </div>
 
-    <div class="balance-card">
-        <div class="label">Твой баланс</div>
-        <div class="amount" id="balance">...</div>
-        <div class="label">💰 монет</div>
+    <div class="nav">
+        <button class="nav-btn active" onclick="showTab('cases')">🎁 Кейсы</button>
+        <button class="nav-btn" onclick="showTab('games')">🎮 Игры</button>
+        <button class="nav-btn" onclick="showTab('inventory')">🎒 Инвентарь</button>
+        <button class="nav-btn" onclick="showTab('top')">📊 Топ</button>
     </div>
 
-    <div class="tabs">
-        <button class="tab active" onclick="showTab('inventory')">🎒 Инвентарь</button>
-        <button class="tab" onclick="showTab('top')">📊 Топ</button>
+    <div class="content" id="main-content">
+        <div class="loading"><div class="spinner"></div>Загрузка...</div>
     </div>
+</div>
 
-    <div class="content" id="content">
-        <div class="loading">Загрузка...</div>
+<!-- Case Win Popup -->
+<div class="popup-overlay" id="win-popup">
+    <div class="popup">
+        <div class="popup-emoji" id="popup-emoji">🎉</div>
+        <div class="popup-title">Выпал предмет!</div>
+        <div class="popup-item" id="popup-item"></div>
+        <div class="popup-rarity" id="popup-rarity"></div>
+        <div style="color: var(--accent); font-size:18px; margin-bottom:16px;" id="popup-value"></div>
+        <button class="popup-close" onclick="closePopup()">Забрать</button>
     </div>
+</div>
 
-    <script>
-        const API = "https://casino-bot-production-e38b.up.railway.app";
-        const tg = window.Telegram.WebApp;
-        tg.expand();
+<!-- Toast -->
+<div class="toast" id="toast"></div>
 
-        let userId = null;
-        let currentTab = 'inventory';
-        let userData = null;
+<script>
+const API = "https://casino-bot-production-e38b.up.railway.app";
+const tg = window.Telegram.WebApp;
+tg.expand();
 
-        async function init() {
-            if (tg.initDataUnsafe?.user?.id) {
-                userId = tg.initDataUnsafe.user.id;
-            } else {
-                userId = 1; // для теста в браузере
-            }
-            await loadUserData();
-            showTab('inventory');
+let userId = tg.initDataUnsafe?.user?.id || 1;
+let currentTab = 'cases';
+let selectedGame = null;
+let coinChoice = null;
+let rouletteChoice = null;
+let userBalance = 0;
+
+// ─── INIT ───────────────────────────────────────────
+async function init() {
+    await refreshBalance();
+    showTab('cases');
+}
+
+async function refreshBalance() {
+    try {
+        const res = await fetch(`${API}/user/${userId}`);
+        const data = await res.json();
+        userBalance = data.balance;
+        document.getElementById('balance-display').textContent = userBalance.toLocaleString();
+        return data;
+    } catch { return null; }
+}
+
+// ─── TABS ───────────────────────────────────────────
+function showTab(tab) {
+    currentTab = tab;
+    document.querySelectorAll('.nav-btn').forEach((b, i) => {
+        b.classList.toggle('active', ['cases','games','inventory','top'][i] === tab);
+    });
+    if (tab === 'cases') renderCases();
+    else if (tab === 'games') renderGames();
+    else if (tab === 'inventory') renderInventory();
+    else if (tab === 'top') renderTop();
+}
+
+function setContent(html) {
+    document.getElementById('main-content').innerHTML = html;
+}
+
+// ─── CASES ───────────────────────────────────────────
+async function renderCases() {
+    setContent('<div class="loading"><div class="spinner"></div>Загрузка...</div>');
+    try {
+        const res = await fetch(`${API}/cases`);
+        const cases = await res.json();
+        let html = `<div class="section-title">🎁 Кейсы</div>`;
+        for (const c of cases) {
+            html += `
+            <div class="card case-card" onclick="openCase(${c.id}, this)">
+                <div class="case-emoji">${c.emoji}</div>
+                <div class="case-info">
+                    <div class="case-name">${c.name}</div>
+                    <div class="case-price">${c.price} 💰</div>
+                </div>
+                <button class="case-btn" id="case-btn-${c.id}">Открыть</button>
+            </div>`;
         }
+        setContent(html);
+    } catch {
+        setContent('<div class="empty">Ошибка загрузки</div>');
+    }
+}
 
-        async function loadUserData() {
-            try {
-                const res = await fetch(`${API}/user/${userId}`);
-                if (!res.ok) throw new Error();
-                userData = await res.json();
-                document.getElementById('balance').textContent = userData.balance.toLocaleString();
-            } catch {
-                document.getElementById('balance').textContent = '—';
-            }
+async function openCase(caseId, el) {
+    const btn = document.getElementById(`case-btn-${caseId}`);
+    btn.disabled = true;
+    btn.textContent = '...';
+    try {
+        const res = await fetch(`${API}/cases/${caseId}/open/${userId}`);
+        if (!res.ok) {
+            const err = await res.json();
+            showToast('❌ ' + err.detail);
+            btn.disabled = false;
+            btn.textContent = 'Открыть';
+            return;
         }
+        const data = await res.json();
+        userBalance = data.new_balance;
+        document.getElementById('balance-display').textContent = userBalance.toLocaleString();
 
-        async function showTab(tab) {
-            currentTab = tab;
-            document.querySelectorAll('.tab').forEach((t, i) => {
-                t.classList.toggle('active', (i === 0 && tab === 'inventory') || (i === 1 && tab === 'top'));
+        const item = data.item;
+        const rarityColors = { 'Обычный':'#aaa', 'Редкий':'#5dade2', 'Эпический':'#a569bd', 'Легендарный':'#c8a96e' };
+        document.getElementById('popup-emoji').textContent = item.emoji;
+        document.getElementById('popup-item').textContent = item.name;
+        document.getElementById('popup-rarity').innerHTML = `<span style="color:${rarityColors[item.rarity]||'#aaa'}">${item.rarity}</span>`;
+        document.getElementById('popup-value').textContent = `${item.value} 💰`;
+        document.getElementById('win-popup').classList.add('visible');
+    } catch {
+        showToast('❌ Ошибка');
+        btn.disabled = false;
+        btn.textContent = 'Открыть';
+    }
+}
+
+function closePopup() {
+    document.getElementById('win-popup').classList.remove('visible');
+    const btn = document.querySelector('.case-btn:disabled');
+    if (btn) { btn.disabled = false; btn.textContent = 'Открыть'; }
+}
+
+// ─── GAMES ───────────────────────────────────────────
+function renderGames() {
+    const html = `
+        <div class="section-title">🎮 Игры</div>
+        <div class="games-grid">
+            <div class="game-card" id="game-slots" onclick="selectGame('slots')">
+                <div class="game-emoji">🎰</div>
+                <div class="game-name">Слоты</div>
+            </div>
+            <div class="game-card" id="game-coin" onclick="selectGame('coin')">
+                <div class="game-emoji">🪙</div>
+                <div class="game-name">Монетка</div>
+            </div>
+            <div class="game-card" id="game-roulette" onclick="selectGame('roulette')" style="grid-column:span 2">
+                <div class="game-emoji">🎡</div>
+                <div class="game-name">Рулетка</div>
+            </div>
+        </div>
+        <div id="game-panel"></div>
+    `;
+    setContent(html);
+}
+
+function selectGame(game) {
+    selectedGame = game;
+    coinChoice = null;
+    rouletteChoice = null;
+    document.querySelectorAll('.game-card').forEach(c => c.classList.remove('active-game'));
+    document.getElementById(`game-${game}`)?.classList.add('active-game');
+
+    let panel = '';
+    if (game === 'slots') {
+        panel = `
+            <div class="game-panel visible">
+                <div class="game-title">🎰 Слоты</div>
+                <div class="slots-display">
+                    <div class="slot-reel" id="r1">❓</div>
+                    <div class="slot-reel" id="r2">❓</div>
+                    <div class="slot-reel" id="r3">❓</div>
+                </div>
+                <div class="input-group">
+                    <div class="input-label">Ставка (мин. 10)</div>
+                    <input class="bet-input" id="bet-input" type="number" placeholder="Введи ставку" min="10">
+                </div>
+                <button class="play-btn" onclick="playSlots()">🎰 Крутить</button>
+                <div class="result-box" id="result"></div>
+            </div>`;
+    } else if (game === 'coin') {
+        panel = `
+            <div class="game-panel visible">
+                <div class="game-title">🪙 Монетка</div>
+                <div class="input-group">
+                    <div class="input-label">Ставка (мин. 10)</div>
+                    <input class="bet-input" id="bet-input" type="number" placeholder="Введи ставку" min="10">
+                </div>
+                <div class="input-label" style="margin-bottom:8px">Выбери сторону</div>
+                <div class="btn-row">
+                    <button class="choice-btn" id="heads-btn" onclick="selectCoin('heads')">👑 Орёл</button>
+                    <button class="choice-btn" id="tails-btn" onclick="selectCoin('tails')">🔤 Решка</button>
+                </div>
+                <button class="play-btn" onclick="playCoin()">🪙 Бросить</button>
+                <div class="result-box" id="result"></div>
+            </div>`;
+    } else if (game === 'roulette') {
+        panel = `
+            <div class="game-panel visible">
+                <div class="game-title">🎡 Рулетка</div>
+                <div class="input-group">
+                    <div class="input-label">Ставка (мин. 10)</div>
+                    <input class="bet-input" id="bet-input" type="number" placeholder="Введи ставку" min="10">
+                </div>
+                <div class="input-label" style="margin-bottom:8px">Выбери цвет</div>
+                <div class="btn-row">
+                    <button class="choice-btn" id="red-btn" onclick="selectRoulette('red')">🔴 x2</button>
+                    <button class="choice-btn" id="black-btn" onclick="selectRoulette('black')">⚫ x2</button>
+                    <button class="choice-btn" id="green-btn" onclick="selectRoulette('green')">🟢 x14</button>
+                </div>
+                <button class="play-btn" onclick="playRoulette()">🎡 Крутить</button>
+                <div class="result-box" id="result"></div>
+            </div>`;
+    }
+    document.getElementById('game-panel').innerHTML = panel;
+}
+
+function selectCoin(choice) {
+    coinChoice = choice;
+    document.getElementById('heads-btn').classList.toggle('selected', choice === 'heads');
+    document.getElementById('tails-btn').classList.toggle('selected', choice === 'tails');
+}
+
+function selectRoulette(choice) {
+    rouletteChoice = choice;
+    ['red','black','green'].forEach(c => {
+        document.getElementById(`${c}-btn`)?.classList.toggle('selected', c === choice);
+    });
+}
+
+async function playSlots() {
+    const bet = parseInt(document.getElementById('bet-input').value);
+    if (!bet || bet < 10) return showToast('❌ Минимальная ставка 10');
+    const btn = document.querySelector('.play-btn');
+    btn.disabled = true;
+    try {
+        const res = await fetch(`${API}/games/slots`, {
+            method: 'POST',
+            headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({user_id: userId, bet})
+        });
+        const data = await res.json();
+        if (!res.ok) { showToast('❌ ' + data.detail); btn.disabled = false; return; }
+
+        // animate reels
+        const reels = ['r1','r2','r3'];
+        reels.forEach((id, i) => {
+            setTimeout(() => {
+                const el = document.getElementById(id);
+                el.textContent = data.result[i];
+                el.classList.add('spin');
+                setTimeout(() => el.classList.remove('spin'), 500);
+            }, i * 150);
+        });
+
+        setTimeout(() => {
+            userBalance = data.new_balance;
+            document.getElementById('balance-display').textContent = userBalance.toLocaleString();
+            const result = document.getElementById('result');
+            const win = data.outcome.includes('+');
+            result.className = `result-box visible ${win ? 'result-win' : 'result-lose'}`;
+            result.textContent = data.outcome;
+            btn.disabled = false;
+        }, 600);
+    } catch { showToast('❌ Ошибка'); btn.disabled = false; }
+}
+
+async function playCoin() {
+    const bet = parseInt(document.getElementById('bet-input').value);
+    if (!bet || bet < 10) return showToast('❌ Минимальная ставка 10');
+    if (!coinChoice) return showToast('❌ Выбери сторону!');
+    const btn = document.querySelector('.play-btn');
+    btn.disabled = true;
+    try {
+        const res = await fetch(`${API}/games/coin`, {
+            method: 'POST',
+            headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({user_id: userId, bet, choice: coinChoice})
+        });
+        const data = await res.json();
+        if (!res.ok) { showToast('❌ ' + data.detail); btn.disabled = false; return; }
+        userBalance = data.new_balance;
+        document.getElementById('balance-display').textContent = userBalance.toLocaleString();
+        const result = document.getElementById('result');
+        const emoji = data.result === 'heads' ? '👑' : '🔤';
+        result.className = `result-box visible ${data.win ? 'result-win' : 'result-lose'}`;
+        result.innerHTML = `${emoji} ${data.win ? 'Угадал!' : 'Не угадал!'}<br>${data.outcome}`;
+        btn.disabled = false;
+    } catch { showToast('❌ Ошибка'); btn.disabled = false; }
+}
+
+async function playRoulette() {
+    const bet = parseInt(document.getElementById('bet-input').value);
+    if (!bet || bet < 10) return showToast('❌ Минимальная ставка 10');
+    if (!rouletteChoice) return showToast('❌ Выбери цвет!');
+    const btn = document.querySelector('.play-btn');
+    btn.disabled = true;
+    try {
+        const res = await fetch(`${API}/games/roulette`, {
+            method: 'POST',
+            headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({user_id: userId, bet, color: rouletteChoice})
+        });
+        const data = await res.json();
+        if (!res.ok) { showToast('❌ ' + data.detail); btn.disabled = false; return; }
+        userBalance = data.new_balance;
+        document.getElementById('balance-display').textContent = userBalance.toLocaleString();
+        const emojis = {red:'🔴', black:'⚫', green:'🟢'};
+        const result = document.getElementById('result');
+        result.className = `result-box visible ${data.win ? 'result-win' : 'result-lose'}`;
+        result.innerHTML = `${emojis[data.result]} ${data.win ? 'Выиграл!' : 'Не повезло!'}<br>${data.outcome}`;
+        btn.disabled = false;
+    } catch { showToast('❌ Ошибка'); btn.disabled = false; }
+}
+
+// ─── INVENTORY ───────────────────────────────────────────
+async function renderInventory() {
+    setContent('<div class="loading"><div class="spinner"></div>Загрузка...</div>');
+    const data = await refreshBalance();
+    const items = data?.inventory || [];
+    if (!items.length) {
+        setContent('<div class="section-title">🎒 Инвентарь</div><div class="empty">Инвентарь пуст 📦<br><br>Открывай кейсы чтобы получить предметы!</div>');
+        return;
+    }
+    const total = items.reduce((s, i) => s + i.value, 0);
+    let html = `<div class="section-title">🎒 Инвентарь</div>`;
+    for (const item of items) {
+        html += `
+        <div class="card inv-item" id="inv-${item.inv_id}">
+            <div class="inv-emoji">${item.emoji}</div>
+            <div class="inv-info">
+                <div class="inv-name">${item.name}</div>
+                <div class="inv-rarity rarity-${item.rarity}">${item.rarity}</div>
+            </div>
+            <div class="inv-value">${item.value}💰</div>
+            <button class="sell-btn" onclick="sellItem(${item.inv_id}, ${item.value})">Продать</button>
+        </div>`;
+    }
+    html += `<button class="sell-all-btn" onclick="sellAll()">💰 Продать всё (${total} монет)</button>`;
+    setContent(html);
+}
+
+async function sellItem(invId, value) {
+    try {
+        const res = await fetch(`${API}/sell`, {
+            method: 'POST',
+            headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({user_id: userId, inv_id: invId})
+        });
+        if (!res.ok) { showToast('❌ Ошибка'); return; }
+        const data = await res.json();
+        userBalance = data.new_balance;
+        document.getElementById('balance-display').textContent = userBalance.toLocaleString();
+        const el = document.getElementById(`inv-${invId}`);
+        if (el) el.remove();
+        showToast(`✅ Продано за ${value}💰`);
+    } catch { showToast('❌ Ошибка'); }
+}
+
+async function sellAll() {
+    const items = document.querySelectorAll('[id^="inv-"]');
+    if (!items.length) return;
+    let total = 0;
+    for (const el of items) {
+        const invId = el.id.split('-')[1];
+        const valueEl = el.querySelector('.inv-value');
+        const value = parseInt(valueEl?.textContent || 0);
+        try {
+            const res = await fetch(`${API}/sell`, {
+                method: 'POST',
+                headers: {'Content-Type':'application/json'},
+                body: JSON.stringify({user_id: userId, inv_id: parseInt(invId)})
             });
+            if (res.ok) { total += value; el.remove(); }
+        } catch {}
+    }
+    await refreshBalance();
+    showToast(`✅ Продано всё за ${total}💰`);
+    document.querySelector('.sell-all-btn')?.remove();
+}
 
-            const content = document.getElementById('content');
-            content.innerHTML = '<div class="loading">Загрузка...</div>';
+// ─── TOP ───────────────────────────────────────────
+async function renderTop() {
+    setContent('<div class="loading"><div class="spinner"></div>Загрузка...</div>');
+    try {
+        const res = await fetch(`${API}/top`);
+        const users = await res.json();
+        const medals = ['🥇','🥈','🥉'];
+        let html = `<div class="section-title">📊 Топ игроков</div>`;
+        users.forEach((u, i) => {
+            html += `
+            <div class="card top-item">
+                <div class="top-rank">${medals[i] || (i+1)}</div>
+                <div class="top-name">@${u.username || 'Аноним'}</div>
+                <div class="top-balance">${u.balance.toLocaleString()}💰</div>
+            </div>`;
+        });
+        setContent(html);
+    } catch {
+        setContent('<div class="empty">Ошибка загрузки</div>');
+    }
+}
 
-            if (tab === 'inventory') {
-                if (!userData) await loadUserData();
-                const items = userData?.inventory || [];
-                if (items.length === 0) {
-                    content.innerHTML = '<div class="empty">🎒 Инвентарь пуст<br><br>Открывай кейсы в боте!</div>';
-                    return;
-                }
-                content.innerHTML = items.map(item => `
-                    <div class="item">
-                        <div>
-                            <div class="name">${item.emoji} ${item.name}</div>
-                            <span class="rarity-badge ${item.rarity}">${item.rarity}</span>
-                        </div>
-                        <div class="value">${item.value}💰</div>
-                    </div>
-                `).join('');
-            } else {
-                try {
-                    const res = await fetch(`${API}/top`);
-                    const users = await res.json();
-                    const medals = ['🥇','🥈','🥉'];
-                    content.innerHTML = users.map((u, i) => `
-                        <div class="top-item">
-                            <div class="rank">${medals[i] || (i+1)+'.'}</div>
-                            <div class="username">@${u.username || 'Аноним'}</div>
-                            <div class="balance">${u.balance.toLocaleString()}💰</div>
-                        </div>
-                    `).join('');
-                } catch {
-                    content.innerHTML = '<div class="empty">Ошибка загрузки</div>';
-                }
-            }
-        }
+// ─── TOAST ───────────────────────────────────────────
+function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2500);
+}
 
-        init();
-    </script>
+init();
+</script>
 </body>
 </html>
