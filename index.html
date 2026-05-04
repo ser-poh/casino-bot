@@ -523,7 +523,10 @@ if (!userId) {
     } catch(e) {}
 }
 
-if (!userId) userId = 7306608319;
+if (!userId) {
+    document.body.innerHTML = '<div style="padding:40px;text-align:center;font-family:sans-serif;color:#fff;background:#0a0a0f;min-height:100vh;display:flex;align-items:center;justify-content:center;flex-direction:column"><div style="font-size:48px;margin-bottom:16px">🎰</div><div style="font-size:18px">Открывай через Telegram бота!</div></div>';
+    throw new Error("no user id");
+}
 let userBalance = 0;
 let currentTab = 'cases';
 let selectedGame = null;
@@ -905,4 +908,4 @@ function showToast(msg) {
 init();
 </script>
 </body>
-</html>я
+</html>
