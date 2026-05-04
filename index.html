@@ -503,15 +503,25 @@ const tg = window.Telegram?.WebApp || null;
 if (tg) tg.expand();
 
 let userId = null;
-try {
-    if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user && tg.initDataUnsafe.user.id) {
-        userId = tg.initDataUnsafe.user.id;
-    } else if (tg && tg.initData) {
-        const params = new URLSearchParams(tg.initData);
-        const user = JSON.parse(decodeURIComponent(params.get('user') || '{}'));
-        if (user.id) userId = user.id;
-    }
-} catch(e) {}
+
+// Сначала пробуем URL параметр
+const urlParams = new URLSearchParams(window.location.search);
+if (urlParams.get('uid')) {
+    userId = parseInt(urlParams.get('uid'));
+}
+
+// Потом пробуем Telegram initData
+if (!userId) {
+    try {
+        if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user && tg.initDataUnsafe.user.id) {
+            userId = tg.initDataUnsafe.user.id;
+        } else if (tg && tg.initData) {
+            const params = new URLSearchParams(tg.initData);
+            const user = JSON.parse(decodeURIComponent(params.get('user') || '{}'));
+            if (user.id) userId = user.id;
+        }
+    } catch(e) {}
+}
 
 if (!userId) userId = 7306608319;
 let userBalance = 0;
@@ -895,4 +905,4 @@ function showToast(msg) {
 init();
 </script>
 </body>
-</html>
+</html>я
