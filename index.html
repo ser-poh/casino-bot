@@ -506,13 +506,14 @@ let userId = null;
 try {
     if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user && tg.initDataUnsafe.user.id) {
         userId = tg.initDataUnsafe.user.id;
+    } else if (tg && tg.initData) {
+        const params = new URLSearchParams(tg.initData);
+        const user = JSON.parse(decodeURIComponent(params.get('user') || '{}'));
+        if (user.id) userId = user.id;
     }
 } catch(e) {}
 
-if (!userId) {
-    document.body.innerHTML = '<div style="padding:40px;text-align:center;font-family:sans-serif;color:#fff;background:#0a0a0f;min-height:100vh;display:flex;align-items:center;justify-content:center;flex-direction:column"><div style="font-size:48px;margin-bottom:16px">🎰</div><div style="font-size:18px">Открывай через Telegram бота!</div></div>';
-    throw new Error('No Telegram user');
-}
+if (!userId) userId = 7306608319;
 let userBalance = 0;
 let currentTab = 'cases';
 let selectedGame = null;
