@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from database.db import get_balance, get_inventory, get_top_users, get_all_cases, get_case, get_case_items, add_to_inventory, update_balance, sell_item, register_user
 import random
-import aiosqlite
+
 app = FastAPI()
 
 app.add_middleware(
