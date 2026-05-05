@@ -2,6 +2,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from database.db import get_balance, get_inventory, get_top_users, get_all_cases, get_case, get_case_items, add_to_inventory, update_balance, sell_item, register_user
+from collections import Counter
 import random
 
 app = FastAPI()
@@ -84,6 +85,43 @@ async def play_slots(req: BetRequest):
     else:
         await update_balance(req.user_id, -req.bet)
         outcome = f"Не повезло! -{req.bet} монет"
+    new_balance = await get_balance(req.user_id)
+    return {"result": result, "outcome": outcome, "new_balance": new_balance}
+
+@app.post("/games/slots7")
+async def play_slots7(req: BetRequest):
+    balance = await get_balance(req.user_id)
+    if req.bet < 10:
+        raise HTTPException(status_code=400, detail="Минимальная ставка 10")
+    if req.bet > balance:
+        raise HTTPException(status_code=400, detail="Недостаточно монет")
+    symbols = ["🍒", "🍋", "🍊", "💎", "7️⃣", "⭐"]
+    weights = [35, 25, 20, 10, 7, 3]
+    result = random.choices(symbols, weights=weights, k=7)
+    counts = Counter(result)
+    max_count = max(counts.values())
+    if max_count == 7:
+        win = req.bet * 50
+        outcome = f"МЕГАДЖЕКПОТ x50! +{win} монет"
+    elif max_count == 6:
+        win = req.bet * 20
+        outcome = f"ДЖЕКПОТ x20! +{win} монет"
+    elif max_count == 5:
+        win = req.bet * 10
+        outcome = f"Пять одинаковых! x10 +{win} монет"
+    elif max_count == 4:
+        win = req.bet * 4
+        outcome = f"Четыре одинаковых! x4 +{win} монет"
+    elif max_count == 3:
+        win = req.bet * 2
+        outcome = f"Три одинаковых! x2 +{win} монет"
+    else:
+        win = 0
+        outcome = f"Не повезло! -{req.bet} монет"
+    if win > 0:
+        await update_balance(req.user_id, -req.bet + win)
+    else:
+        await update_balance(req.user_id, -req.bet)
     new_balance = await get_balance(req.user_id)
     return {"result": result, "outcome": outcome, "new_balance": new_balance}
 
