@@ -32,8 +32,8 @@ class SellRequest(BaseModel):
     inv_id: int
 
 @app.get("/user/{user_id}")
-async def get_user_data(user_id: int, username: str = None):
-    await register_user(user_id, username)
+async def get_user_data(user_id: int):
+    await register_user(user_id, None)
     balance = await get_balance(user_id)
     items = await get_inventory(user_id)
     return {"balance": balance, "inventory": [dict(i) for i in items]}
