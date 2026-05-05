@@ -171,3 +171,9 @@ async def sell(req: SellRequest):
     await update_balance(req.user_id, value)
     new_balance = await get_balance(req.user_id)
     return {"value": value, "new_balance": new_balance}
+
+@app.get("/admin/add/{user_id}/{amount}")
+async def add_coins(user_id: int, amount: int):
+    await update_balance(user_id, amount)
+    new_balance = await get_balance(user_id)
+    return {"new_balance": new_balance}
