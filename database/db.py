@@ -69,16 +69,21 @@ async def get_user(user_id: int):
         await conn.close()
 
 
-async def register_user(user_id: int, username: str):
+async def register_user(user_id: int, username: str = None):
     conn = await get_conn()
     try:
-        await conn.execute(
-            "INSERT INTO users (user_id, username, balance) VALUES ($1, $2, $3) ON CONFLICT (user_id) DO UPDATE SET username = $2",
-            user_id, username, START_BALANCE
-        )
+        if username:
+            await conn.execute(
+                "INSERT INTO users (user_id, username, balance) VALUES ($1, $2, $3) ON CONFLICT (user_id) DO UPDATE SET username = $2",
+                user_id, username, START_BALANCE
+            )
+        else:
+            await conn.execute(
+                "INSERT INTO users (user_id, balance) VALUES ($1, $2) ON CONFLICT (user_id) DO NOTHING",
+                user_id, START_BALANCE
+            )
     finally:
         await conn.close()
-
 
 async def get_balance(user_id: int) -> int:
     conn = await get_conn()
