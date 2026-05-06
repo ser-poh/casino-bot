@@ -33,8 +33,8 @@ class SellRequest(BaseModel):
     inv_id: int
 
 @app.get("/user/{user_id}")
-async def get_user_data(user_id: int):
-    await register_user(user_id, None)
+async def get_user_data(user_id: int, username: str = None):
+    await register_user(user_id, username)
     balance = await get_balance(user_id)
     items = await get_inventory(user_id)
     return {"balance": balance, "inventory": [dict(i) for i in items]}
@@ -65,9 +65,11 @@ async def open_case(case_id: int, user_id: int):
 
 @app.post("/games/slots")
 async def play_slots(req: BetRequest):
-    balance = await get_balance(req.user_id)
     if req.bet < 10:
         raise HTTPException(status_code=400, detail="Минимальная ставка 10")
+    if req.bet > 1_000_000:
+        raise HTTPException(status_code=400, detail="Максимальная ставка 1000000")
+    balance = await get_balance(req.user_id)
     if req.bet > balance:
         raise HTTPException(status_code=400, detail="Недостаточно монет")
     symbols = ["🍒", "🍋", "🍊", "💎", "7️⃣", "⭐"]
@@ -90,9 +92,11 @@ async def play_slots(req: BetRequest):
 
 @app.post("/games/slots7")
 async def play_slots7(req: BetRequest):
-    balance = await get_balance(req.user_id)
     if req.bet < 10:
         raise HTTPException(status_code=400, detail="Минимальная ставка 10")
+    if req.bet > 100_000:
+        raise HTTPException(status_code=400, detail="Максимальная ставка 100000")
+    balance = await get_balance(req.user_id)
     if req.bet > balance:
         raise HTTPException(status_code=400, detail="Недостаточно монет")
     symbols = ["🍒", "🍋", "🍊", "💎", "7️⃣", "⭐"]
@@ -127,9 +131,11 @@ async def play_slots7(req: BetRequest):
 
 @app.post("/games/coin")
 async def play_coin(req: CoinRequest):
-    balance = await get_balance(req.user_id)
     if req.bet < 10:
         raise HTTPException(status_code=400, detail="Минимальная ставка 10")
+    if req.bet > 1_000_000:
+        raise HTTPException(status_code=400, detail="Максимальная ставка 1000000")
+    balance = await get_balance(req.user_id)
     if req.bet > balance:
         raise HTTPException(status_code=400, detail="Недостаточно монет")
     result = random.choice(["heads", "tails"])
@@ -145,9 +151,11 @@ async def play_coin(req: CoinRequest):
 
 @app.post("/games/roulette")
 async def play_roulette(req: RouletteRequest):
-    balance = await get_balance(req.user_id)
     if req.bet < 10:
         raise HTTPException(status_code=400, detail="Минимальная ставка 10")
+    if req.bet > 1_000_000:
+        raise HTTPException(status_code=400, detail="Максимальная ставка 1000000")
+    balance = await get_balance(req.user_id)
     if req.bet > balance:
         raise HTTPException(status_code=400, detail="Недостаточно монет")
     spin = random.choices(["red", "black", "green"], weights=[18, 18, 2], k=1)[0]
